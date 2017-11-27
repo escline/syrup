@@ -3,7 +3,7 @@ require 'bigdecimal'
 module Syrup
   module Institutions
     class InstitutionBase
-      
+
       class << self
         # This method is called whenever a class inherits from this class. We keep track of
         # all of them because they should all be institutions. This way we can provide a
@@ -12,36 +12,36 @@ module Syrup
           @subclasses ||= []
           @subclasses << subclass
         end
-        
+
         # Returns an array of all classes that inherit from this class. Or, in other words,
         # an array of all supported institutions
         def subclasses
           @subclasses
         end
       end
-      
+
       ##
       # :attr_writer: populated
-      
+
       ##
       # :attr_reader: populated?
-      
+
       ##
       # :attr_reader: agent
       # Gets an instance of Mechanize for use by any subclasses.
-      
+
       ##
       # :attr_reader: accounts
       # Returns an array of all of the user's accounts at this institution.
       # If accounts hasn't been populated, it populates accounts and then returns them.
-      
+
       #
       attr_accessor :username, :password, :secret_questions
-      
+
       def initialize
         @accounts = []
       end
-      
+
       # This method allows you to setup an institution with block syntax
       #
       #   InstitutionBase.setup do |config|
@@ -52,20 +52,20 @@ module Syrup
         yield self
         self
       end
-      
+
       def populated?
         @populated
       end
-      
+
       def populated=(value)
         @populated = value
       end
-      
+
       def accounts
         populate_accounts
         @accounts
       end
-      
+
       # Returns an account with the specified +account_id+. Always use this method to
       # create a new `Account` object. If you do, it will get populated correctly whenever
       # the population occurs.
@@ -77,7 +77,7 @@ module Syrup
         end
         account
       end
-      
+
       # Populates an account given an `account_id`. The implementing institution may populate
       # all accounts when this is called if there isn't a way to only request one account's
       # information.
@@ -85,7 +85,7 @@ module Syrup
         unless populated?
           result = fetch_account(account_id)
           return nil if result.nil?
-          
+
           if result.respond_to?(:each)
             populate_accounts(result)
             find_account_by_id(account_id)
@@ -96,12 +96,12 @@ module Syrup
           end
         end
       end
-      
+
       # Populates all of the user's accounts at this institution.
       def populate_accounts(populated_accounts = nil)
         unless populated?
           all_accounts = populated_accounts || fetch_accounts
-          
+
           # Remove any accounts that were added, that don't actually exist
           @accounts.delete_if do |a|
             if all_accounts.include?(a)
@@ -111,14 +111,14 @@ module Syrup
               true
             end
           end
-          
+
           # Add any additional account information
           new_accounts = []
           all_accounts.each do |filled_account|
             account = @accounts.find { |a| a.id == filled_account.id }
-            
+
             filled_account.populated = true
-            
+
             # If we already had an account with this id, fill it with data
             if account
               account.merge! filled_account
@@ -127,13 +127,13 @@ module Syrup
             end
           end
           @accounts |= new_accounts # Uses set union
-          
+
           self.populated = true
         end
       end
-      
+
       protected
-      
+
       def agent
         unless @agent
           @agent = Mechanize.new
@@ -146,15 +146,15 @@ module Syrup
 
         @agent
       end
-      
+
       # This is just a helper method that simplifies the common process of extracting a number
       # from a string representing a currency.
-      # 
+
       #   parse_currency('$ 1,234.56') #=> 1234.56
       def parse_currency(currency)
         BigDecimal.new(currency.gsub(/[^0-9.-]/, ''))
       end
-      
+
       # A helper method that replaces a few HTML entities with their actual characters
       #
       #   unescape_html("You &amp; I") #=> "You & I"
@@ -191,7 +191,7 @@ module Syrup
           end
         end
       end
-      
+
     end
   end
 end
